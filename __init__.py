@@ -1,30 +1,36 @@
 from cryptography.fernet import Fernet
-from flask import Flask, render_template
+from flask import Flask, render_template_string, render_template, jsonify
+from flask import render_template
+from flask import json
+from urllib.request import urlopen
+import sqlite3
 
-app = Flask(__name__)
+
+app = Flask(name)
 
 @app.route('/')
-def hello_world():
-    return render_template('hello.html')  # Page d'accueil
+def home():
+    return "<h1>Bienvenue sur l'API CryptoPython</h1>"
 
-# Génération de la clé unique à chaque démarrage
-key = Fernet.generate_key()
-f = Fernet(key)
-
-@app.route('/encrypt/<string:valeur>')
-def encryptage(valeur):
-    valeur_bytes = valeur.encode()  # Conversion str -> bytes
-    token = f.encrypt(valeur_bytes)  # Encrypt la valeur
-    return f"Valeur encryptée : {token.decode()}"  # Retourne le token en str
-
-@app.route('/decrypt/<string:token>')
-def decryptage(token):
+@app.route('/encrypt/<string:key>/<string:message>')
+def encrypt_message(key, message):
     try:
-        token_bytes = token.encode()  # Conversion str -> bytes
-        valeur = f.decrypt(token_bytes).decode()  # Décryptage
-        return f"Valeur décryptée : {valeur}"
+        key_bytes = key.encode()  # Convertir la clé en bytes
+        f = Fernet(key_bytes)  # Créer un objet Fernet avec cette clé
+        encrypted = f.encrypt(message.encode())  # Chiffrer le message
+        return encrypted.decode()  # Retourne le message chiffré
     except Exception as e:
-        return f"Erreur lors du décryptage : {str(e)}"
+        return f"Erreur : {str(e)}"
 
-if __name__ == "__main__":
+@app.route('/decrypt/<string:key>/<string:token>')
+def decrypt_message(key, token):
+    try:
+        key_bytes = key.encode()  # Convertir la clé en bytes
+        f = Fernet(key_bytes)  # Créer un objet Fernet avec cette clé
+        decrypted = f.decrypt(token.encode())  # Déchiffrer le message
+        return decrypted.decode()  # Retourne le message déchiffré
+    except Exception as e:
+        return f"Erreur : {str(e)}"
+
+if name == "main":
     app.run(debug=True)
